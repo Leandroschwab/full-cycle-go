@@ -48,11 +48,11 @@ func GetCotacao() (*Cotacao, error) {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 	//io.Copy(os.Stdout, res.Body)
@@ -72,24 +72,28 @@ func GetCotacao() (*Cotacao, error) {
 	
     db, err := sql.Open("sqlite3", "./cotacao.db")
     if err != nil {
-        panic(err)
+        return nil, err
     }
     defer db.Close()
 
 	err = InsertCotacao(db, &cotacao)
     if err != nil {
-        panic(err)
+        return nil, err
     }
 	
 	return &cotacao, nil
 }
 
 func InsertCotacao(db *sql.DB, cotacao *Cotacao) error {
-	stmt, err := db.Prepare("insert into cotacao(code, codein, high, low, varBid, pctChange, bid, ask, timestamp, create_date) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+    defer cancel()
+
+    stmt, err := db.PrepareContext(ctx, "insert into cotacao(code, codein, high, low, varBid, pctChange, bid, ask, timestamp, create_date) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    if err != nil {
+        return err
+    }
+    defer stmt.Close()
+
 	_, err = stmt.Exec(cotacao.Code, cotacao.Codein, cotacao.High, cotacao.Low, cotacao.VarBid, cotacao.PctChange, cotacao.Bid, cotacao.Ask, cotacao.Timestamp, cotacao.Create_date)
 	if err != nil {
 		return err

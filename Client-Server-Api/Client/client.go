@@ -16,10 +16,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+    res, err := http.DefaultClient.Do(req)
+    if err != nil {
+        if ctx.Err() == context.DeadlineExceeded {
+            fmt.Println("timeout ao requisitar a cotacao")
+        }
+        panic(err)
+    }
 	defer res.Body.Close()
     body, err := io.ReadAll(res.Body)
     if err != nil {
