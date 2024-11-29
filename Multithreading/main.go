@@ -56,14 +56,14 @@ func main() {
 			return
 
 		case <-time.After(time.Second * 1):
-			println("timeout")
+			println("O tempo de resposta foi muito alto nenhum dos serviços responderam a tempo")
 			return
 		}
 	}
 }
 
 func reqBrasilAPI(c1 chan Message, cep string) {
-	//time.Sleep(500 * time.Millisecond)
+	//time.Sleep(1000 * time.Millisecond)
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://brasilapi.com.br/api/cep/v1/"+cep, nil)
@@ -93,7 +93,7 @@ func reqBrasilAPI(c1 chan Message, cep string) {
 }
 
 func reqViaCEP(c2 chan Message, cep string) {
-	//time.Sleep(500 * time.Millisecond)
+	//time.Sleep(1000 * time.Millisecond)
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://viacep.com.br/ws/"+cep+"/json/", nil)
