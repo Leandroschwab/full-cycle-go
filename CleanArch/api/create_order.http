@@ -1,15 +1,12 @@
 POST http://localhost:8000/order HTTP/1.1
-Host: 172.20.20.15:8000
+Host: localhost:8000
 Content-Type: application/json
 
 {
-    "id":"1",
+    "id":"2",
     "price": 100.5,
     "tax": 0.5
 }
 
-###
-
-GET http://localhost:8000/order HTTP/1.1
-Host: 172.20.20.15:8000
-Content-Type: application/json
+//sample curl command to create an order:
+curl -X POST http://localhost:8000/order -H "Content-Type: application/json" -d '{"id":"2", "price": 100.5, "tax": 0.5}'
