@@ -10,20 +10,20 @@ import (
 )
 
 type WebOrderHandler struct {
-	EventDispatcher   events.EventDispatcherInterface
-	OrderRepository   entity.OrderRepositoryInterface
-	OrderCreatedEvent events.EventInterface
+	EventDispatcher events.EventDispatcherInterface
+	OrderRepository entity.OrderRepositoryInterface
+	OrderEvent      events.EventInterface
 }
 
 func NewWebOrderHandler(
 	EventDispatcher events.EventDispatcherInterface,
 	OrderRepository entity.OrderRepositoryInterface,
-	OrderCreatedEvent events.EventInterface,
+	OrderEvent events.EventInterface,
 ) *WebOrderHandler {
 	return &WebOrderHandler{
-		EventDispatcher:   EventDispatcher,
-		OrderRepository:   OrderRepository,
-		OrderCreatedEvent: OrderCreatedEvent,
+		EventDispatcher: EventDispatcher,
+		OrderRepository: OrderRepository,
+		OrderEvent:      OrderEvent,
 	}
 }
 
@@ -35,13 +35,29 @@ func (h *WebOrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createOrder := usecase.NewCreateOrderUseCase(h.OrderRepository, h.OrderCreatedEvent, h.EventDispatcher)
+	createOrder := usecase.NewCreateOrderUseCase(h.OrderRepository, h.OrderEvent, h.EventDispatcher)
 	output, err := createOrder.Execute(dto)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = json.NewEncoder(w).Encode(output)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// list all orders
+func (h *WebOrderHandler) ListAll(w http.ResponseWriter, r *http.Request) {
+	listAllOrders := usecase.NewListAllOrdersUseCase(h.OrderRepository, h.OrderEvent, h.EventDispatcher)
+	orders, err := listAllOrders.Execute()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(orders)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

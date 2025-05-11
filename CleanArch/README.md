@@ -67,3 +67,24 @@ go run main.go wire_gen.go
 - URL: `172.20.20.15:15672`
 - User: `guest`
 - Password: `guest`
+
+### Desafio
+
+Olá devs!
+Agora é a hora de botar a mão na massa. Para este desafio, você precisará criar o usecase de listagem das orders.
+Esta listagem precisa ser feita com:
+- Endpoint REST (GET /order)
+- Service ListOrders com GRPC
+- Query ListOrders GraphQL
+Não esqueça de criar as migrações necessárias e o arquivo api.http com a request para criar e listar as orders.
+
+Para a criação do banco de dados, utilize o Docker (Dockerfile / docker-compose.yaml), com isso ao rodar o comando docker compose up tudo deverá subir, preparando o banco de dados.
+Inclua um README.md com os passos a serem executados no desafio e a porta em que a aplicação deverá responder em cada serviço.
+
+
+
+Progress track
+Created CleanArch/internal/usecase/list_orders.go
+added "FindAll()" CleanArch/internal/infra/database/order_repository.go
+added "FindAll()" CleanArch/internal/entity/interface.go 
+UseCase created.
