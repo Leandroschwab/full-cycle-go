@@ -14,3 +14,11 @@ input OrderInput {
 type Mutation {
     createOrder(input: OrderInput): Order
 }
+
+type listOrdersResponse {
+    orders: [Order]
+}
+
+type Query {
+    listOrders: listOrdersResponse
+}

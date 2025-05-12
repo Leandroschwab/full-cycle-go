@@ -1,23 +1,48 @@
-
 ## Environment Setup
 
-To run MySQL and RabbitMQ on another machine with Docker, update the environment variables accordingly. ```CleanArch/cmd/ordersystem/.env ```
-## Installation
+To run MySQL and RabbitMQ on another machine with Docker, update the environment variables accordingly:  
+```CleanArch/cmd/ordersystem/.env```
+
+
+## Update .env file
+
+   Precisei atualizar o arquivo .env trocando o endereço do mysql e rabbitmq para o ip da minha máquina docker.
+
+
+## important Notes
 
 1. Install Wire:
    ```bash
    go install github.com/google/wire/cmd/wire@latest
    export PATH=$PATH:$(go env GOPATH)/bin
    ```
-2. Generate dependency injection code:
+    Generate dependency injection code:
    ```bash
    wire
    ```
-
 3. Install Evans (gRPC client):
    ```bash
    go install github.com/ktr0731/evans@latest
    ```
+4. Install Protocol Buffers and gRPC tools:
+   ```bash
+   sudo apt install -y protobuf-compiler
+   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+   ```
+
+5. Install gqlgen:
+   ```bash
+   go get github.com/99designs/gqlgen
+   go run github.com/99designs/gqlgen generate
+   ```
+
+## Running the Application
+
+Run the application with the following command:
+```bash
+go run main.go wire_gen.go
+```
 
 ## Usage
 
@@ -27,9 +52,12 @@ To run MySQL and RabbitMQ on another machine with Docker, update the environment
    ```bash
    evans -r repl
    ```
-2. Call the `CreateOrder` method:
+2. Call the `CreateOrder` or `ListOrders` methods:
    ```bash
-   call CreateOrder
+   package pb
+   service orderService
+   call ListOrders
+   call CreateOrder or call ListOrders
    ```
 
 ### GraphQL
@@ -46,6 +74,19 @@ To run MySQL and RabbitMQ on another machine with Docker, update the environment
        }
    }
    ```
+3. Example query:
+   ```graphql
+   query {
+       listOrders {
+           orders {
+               id
+               Price
+               Tax
+               FinalPrice
+           }
+       }
+   }
+   ```
 
 ### REST API
 
@@ -53,18 +94,14 @@ To run MySQL and RabbitMQ on another machine with Docker, update the environment
    ```bash
    CleanArch/api/create_order.http
    ```
+   ```bash
+   CleanArch/api/list_orders.http
+   ```
 2. Open the file in an HTTP client (e.g., VS Code REST Client or Postman) and execute the requests.
-
-## Running the Application
-
-Run the application with the following command:
-```bash
-go run main.go wire_gen.go
-```
 
 ## RabbitMQ
 
-- URL: `172.20.20.15:15672`
+- URL: `<docker Machine ip>:15672`
 - User: `guest`
 - Password: `guest`
 
@@ -82,30 +119,20 @@ Para a criação do banco de dados, utilize o Docker (Dockerfile / docker-compos
 Inclua um README.md com os passos a serem executados no desafio e a porta em que a aplicação deverá responder em cada serviço.
 
 
+## Progress Track
 
-Progress track
-Created CleanArch/internal/usecase/list_orders.go
-added "FindAll()" CleanArch/internal/infra/database/order_repository.go
-added "FindAll()" CleanArch/internal/entity/interface.
+- Created `CleanArch/internal/usecase/list_orders.go`
+- Added `FindAll()` to `CleanArch/internal/infra/database/order_repository.go`
+- Added `FindAll()` to `CleanArch/internal/entity/interface`
+- UseCase created
+- WebServer `GET /order` working
+- gRPC `ListOrders` working
+- GraphQL `ListOrders` working
 
-UseCase created.
+## Additional Tools
 
-WebServer GET /order Working
-
-
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
-
-export PATH=$PATH:$(go env GOPATH)/bin
-protoc --go_out=. --go-grpc_out=. protofiles/order.proto
-protoc --go_out=. --go-grpc_out=. internal/infra/grpc/protofiles/order.proto
-
-
-wget https://github.com/protocolbuffers/protobuf/releases/download/v21.9/protoc-21.9-linux-x86_64.zip
-
-unzip protoc-21.9-linux-x86_64.zip -d protoc-21.9
-sudo mv protoc-21.9/bin/protoc /usr/local/bin/
-sudo mv protoc-21.9/include/* /usr/local/include/
-protoc --version
-
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+1. Install gqlgen:
+   ```bash
+   go get github.com/99designs/gqlgen
+   go run github.com/99designs/gqlgen generate
+   ```
