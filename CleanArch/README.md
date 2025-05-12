@@ -86,5 +86,26 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 Progress track
 Created CleanArch/internal/usecase/list_orders.go
 added "FindAll()" CleanArch/internal/infra/database/order_repository.go
-added "FindAll()" CleanArch/internal/entity/interface.go 
+added "FindAll()" CleanArch/internal/entity/interface.
+
 UseCase created.
+
+WebServer GET /order Working
+
+
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+
+export PATH=$PATH:$(go env GOPATH)/bin
+protoc --go_out=. --go-grpc_out=. protofiles/order.proto
+protoc --go_out=. --go-grpc_out=. internal/infra/grpc/protofiles/order.proto
+
+
+wget https://github.com/protocolbuffers/protobuf/releases/download/v21.9/protoc-21.9-linux-x86_64.zip
+
+unzip protoc-21.9-linux-x86_64.zip -d protoc-21.9
+sudo mv protoc-21.9/bin/protoc /usr/local/bin/
+sudo mv protoc-21.9/include/* /usr/local/include/
+protoc --version
+
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
