@@ -19,7 +19,7 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 
 1. **Clone o repositório**:
    ```bash
-   git clone <URL_DO_REPOSITORIO>
+   git clone https://github.com/Leandroschwab/full-cycle-go.git
    cd CleanArch
    ```
 
