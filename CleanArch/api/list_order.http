@@ -2,7 +2,7 @@
 ###
 
 GET http://localhost:8000/order HTTP/1.1
-Host: 172.20.20.15:8000
+Host: localhost:8000
 Content-Type: application/json
 
 //sample curl command to get all orders:
