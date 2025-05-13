@@ -76,7 +76,7 @@ go run main.go wire_gen.go
    ```
 3. Example query:
    ```graphql
-   query {
+   query ListOrders {
        listOrders {
            orders {
                id

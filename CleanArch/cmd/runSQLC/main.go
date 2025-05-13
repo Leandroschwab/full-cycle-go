@@ -5,24 +5,50 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
+
 	"github.com/devfullcycle/20-CleanArch/internal/db"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
 	ctx := context.Background()
-	//dbConn, err := sql.Open("mysql", "root:root@tcp(172.20.20.15:3306)/orders")
+
+	// Declare dbConn and err variables
+	var dbConn *sql.DB
+	var err error
+
+	// Load environment variables
 	server := os.Getenv("MYSQL_HOST")
 	port := os.Getenv("MYSQL_PORT")
-	user := os.Getenv("MYSQL_USER")	
+	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
 	database := os.Getenv("MYSQL_DATABASE")
-	// Connect to the database using the provided credentials
-	dbConn, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, server, port, database))
-	if err != nil {
-		panic(err)
+
+	// Retry logic for database connection
+	retryInterval := 3 * time.Second
+	timeout := 30 * time.Second
+	startTime := time.Now()
+
+	for {
+		dbConn, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, server, port, database))
+		if err == nil {
+			err = dbConn.Ping()
+			if err == nil {
+				break
+			}
+		}
+
+		if time.Since(startTime) > timeout {
+			panic(fmt.Sprintf("Failed to connect to database after %v: %v", timeout, err))
+		}
+
+		fmt.Println("Retrying database connection...")
+		time.Sleep(retryInterval)
 	}
+
 	defer dbConn.Close()
+	fmt.Println("Connected to the database successfully.")
 
 	queries := db.New(dbConn)
 

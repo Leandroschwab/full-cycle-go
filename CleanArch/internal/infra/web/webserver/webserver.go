@@ -38,5 +38,5 @@ func (s *WebServer) Start() {
             s.Router.Method(method, path, handler)
         }
     }
-	http.ListenAndServe(s.WebServerPort, s.Router)
+    http.ListenAndServe(":"+s.WebServerPort, s.Router) 
 }

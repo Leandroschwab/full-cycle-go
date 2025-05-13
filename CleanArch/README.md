@@ -20,7 +20,7 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 1. **Clone o repositório**:
    ```bash
    git clone https://github.com/Leandroschwab/full-cycle-go.git
-   cd CleanArch
+   cd full-cycle-go/CleanArch
    ```
 
 2. **Edite o arquivo `.env`**:
@@ -28,7 +28,7 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 
 3. **Execute o Docker Compose**:
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build --no-cache
    ```
 
 ---
@@ -63,11 +63,11 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 2. **Exemplo de Mutation**:
    ```graphql
    mutation createOrder { 
-       createOrder(input: {id: "ccc", price: 100, tax: 2.0}) { 
+       createOrder(input: {id: "ccc", Price: 100, Tax: 2.0}) { 
            id 
-           price 
-           tax 
-           finalPrice
+           Price 
+           Tax 
+           FinalPrice
        }
    }
    ```
