@@ -28,7 +28,7 @@ Inclua um README.md com os passos a serem executados no desafio e a porta em que
 
 3. **Execute o Docker Compose**:
    ```bash
-   docker-compose up -d --build --no-cache
+   docker-compose up -d --build
    ```
 
 ---
