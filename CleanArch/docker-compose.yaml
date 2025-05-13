@@ -1,16 +1,17 @@
+version: "3.8"
 services:
   mysql:
     image: mysql:5.7
     container_name: mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: orders
-      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - 3306:3306
-    volumes:
-      - .docker/mysql:/var/lib/mysql
+      - ${MYSQL_PORT}:${MYSQL_PORT}
+    #volumes:
+      #- .docker/mysql:/var/lib/mysql
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -20,5 +21,42 @@ services:
       - 5672:5672
       - 15672:15672
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+  migrations:
+    image: golang:1.23-alpine3.21
+    container_name: migrations
+    depends_on:
+      - mysql
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["sh", "-c", "go run cmd/sqlc/main.go"]
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+  app:
+    build:
+      context: .
+    container_name: app
+    depends_on:
+      - mysql
+      - migrations
+    ports:
+      - "${WEB_SERVER_PORT}:8000" # Web Server Port
+      - "${GRAPHQL_SERVER_PORT}:8080" # GraphQL Server Port
+      - "${GRPC_SERVER_PORT}:${GRPC_SERVER_PORT}" # GRPC Server Port
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    command: ["./main"]
+
+

@@ -1,109 +1,4 @@
-## Environment Setup
-
-To run MySQL and RabbitMQ on another machine with Docker, update the environment variables accordingly:  
-```CleanArch/cmd/ordersystem/.env```
-
-
-## Update .env file
-
-   Precisei atualizar o arquivo .env trocando o endereço do mysql e rabbitmq para o ip da minha máquina docker.
-
-
-## important Notes
-
-1. Install Wire:
-   ```bash
-   go install github.com/google/wire/cmd/wire@latest
-   export PATH=$PATH:$(go env GOPATH)/bin
-   ```
-    Generate dependency injection code:
-   ```bash
-   wire
-   ```
-3. Install Evans (gRPC client):
-   ```bash
-   go install github.com/ktr0731/evans@latest
-   ```
-4. Install Protocol Buffers and gRPC tools:
-   ```bash
-   sudo apt install -y protobuf-compiler
-   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-   ```
-
-5. Install gqlgen:
-   ```bash
-   go get github.com/99designs/gqlgen
-   go run github.com/99designs/gqlgen generate
-   ```
-
-## Running the Application
-
-Run the application with the following command:
-```bash
-go run main.go wire_gen.go
-```
-
-## Usage
-
-### gRPC
-
-1. Start Evans in REPL mode:
-   ```bash
-   evans -r repl
-   ```
-2. Call the `CreateOrder` or `ListOrders` methods:
-   ```bash
-   package pb
-   service orderService
-   call ListOrders
-   call CreateOrder or call ListOrders
-   ```
-
-### GraphQL
-
-1. Forward port `8080` and open it in your browser.
-2. Example mutation:
-   ```graphql
-   mutation createOrder { 
-       createOrder(input: {id: "ccc", Price: 100, Tax: 2.0}) { 
-           id 
-           Price 
-           Tax 
-           FinalPrice
-       }
-   }
-   ```
-3. Example query:
-   ```graphql
-   query {
-       listOrders {
-           orders {
-               id
-               Price
-               Tax
-               FinalPrice
-           }
-       }
-   }
-   ```
-
-### REST API
-
-1. Use the provided HTTP file to test the REST API:
-   ```bash
-   CleanArch/api/create_order.http
-   ```
-   ```bash
-   CleanArch/api/list_orders.http
-   ```
-2. Open the file in an HTTP client (e.g., VS Code REST Client or Postman) and execute the requests.
-
-## RabbitMQ
-
-- URL: `<docker Machine ip>:15672`
-- User: `guest`
-- Password: `guest`
+# CleanArch 
 
 ### Desafio
 
@@ -115,24 +10,109 @@ Esta listagem precisa ser feita com:
 - Query ListOrders GraphQL
 Não esqueça de criar as migrações necessárias e o arquivo api.http com a request para criar e listar as orders.
 
-Para a criação do banco de dados, utilize o Docker (Dockerfile / docker-compose.yaml), com isso ao rodar o comando docker compose up tudo deverá subir, preparando o banco de dados.
+Para a criação do banco de dados, utilize o Docker (Dockerfile / docker-compose.yaml), com isso ao rodar o comando `docker-compose up` tudo deverá subir, preparando o banco de dados.
 Inclua um README.md com os passos a serem executados no desafio e a porta em que a aplicação deverá responder em cada serviço.
 
+---
 
-## Progress Track
+### Passos para Execução
 
-- Created `CleanArch/internal/usecase/list_orders.go`
-- Added `FindAll()` to `CleanArch/internal/infra/database/order_repository.go`
-- Added `FindAll()` to `CleanArch/internal/entity/interface`
-- UseCase created
-- WebServer `GET /order` working
-- gRPC `ListOrders` working
-- GraphQL `ListOrders` working
-
-## Additional Tools
-
-1. Install gqlgen:
+1. **Clone o repositório**:
    ```bash
-   go get github.com/99designs/gqlgen
-   go run github.com/99designs/gqlgen generate
+   git clone <URL_DO_REPOSITORIO>
+   cd CleanArch
    ```
+
+2. **Edite o arquivo `.env`**:
+   - Configure as variáveis de ambiente necessárias no arquivo `.env`.
+
+3. **Execute o Docker Compose**:
+   ```bash
+   docker-compose up -d
+   ```
+
+---
+
+### Testando a Aplicação
+
+#### GRPC
+
+1. **Inicie o Evans em modo REPL**:
+   ```bash
+   evans -r repl --host localhost --port 50051
+   ```
+
+2. **Chame os métodos `CreateOrder` ou `ListOrders`**:
+   ```bash
+   package pb
+   service orderService
+   call CreateOrder
+   call ListOrders
+   ```
+
+---
+
+#### GraphQL
+
+1. **Acesse o playground do GraphQL**:
+   - Abra o navegador e acesse  pela porta definida no `.env` (padrão `8080`):
+    ```bash
+   `http://localhost:8080`.
+    ```
+
+2. **Exemplo de Mutation**:
+   ```graphql
+   mutation createOrder { 
+       createOrder(input: {id: "ccc", price: 100, tax: 2.0}) { 
+           id 
+           price 
+           tax 
+           finalPrice
+       }
+   }
+   ```
+
+3. **Exemplo de Query**:
+   ```graphql
+   query {
+       listOrders {
+           orders {
+               id
+               price
+               tax
+               finalPrice
+           }
+       }
+   }
+   ```
+
+---
+
+#### REST API
+
+1. **Use o arquivo HTTP para testar a API REST**:
+   - Arquivo para criar pedidos:
+     ```bash
+     CleanArch/api/create_order.http
+     ```
+   - Arquivo para listar pedidos:
+     ```bash
+     CleanArch/api/list_orders.http
+     ```
+
+2. **Execute as requisições**:
+   - Use um cliente HTTP como o VS Code REST Client ou o Postman para executar as requisições. Não esqueça de alterar a URL base para o servidor se necessário.
+
+---
+
+### Notas Adicionais
+
+- Certifique-se de que as portas configuradas no `.env` estão disponíveis no seu sistema.
+- Para reiniciar os serviços, use:
+  ```bash
+  docker-compose down && docker-compose up -d
+  ```
+- Para limpar o banco de dados, exclua os volumes do Docker:
+  ```bash
+  docker-compose down -v
+  ```

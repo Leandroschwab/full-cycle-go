@@ -7,6 +7,4 @@ Content-Type: application/json
     "price": 100.5,
     "tax": 0.5
 }
-
-//sample curl command to create an order:
-curl -X POST http://localhost:8000/order -H "Content-Type: application/json" -d '{"id":"2", "price": 100.5, "tax": 0.5}'
+curl -X POST http://localhost:8000/order -H "Content-Type: application/json" -d '{"id":"6","price":100.5,"tax":0.5}'
