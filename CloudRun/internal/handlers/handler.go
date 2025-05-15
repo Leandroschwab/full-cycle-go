@@ -22,6 +22,46 @@ type CEPCodeResponse struct {
 	Error        string  `json:"error,omitempty"`
 }
 
+type LocationService interface {
+	GetLocationByCEP(cep string) (*services.ViaCEP, error)
+}
+
+type TemperatureService interface {
+	GetTemperature(city, state string) (float64, float64, float64, error)
+}
+
+type defaultLocationService struct{}
+type defaultTemperatureService struct{}
+
+func (s *defaultLocationService) GetLocationByCEP(cep string) (*services.ViaCEP, error) {
+	return services.GetLocationByCEP(cep)
+}
+
+func (s *defaultTemperatureService) GetTemperature(city, state string) (float64, float64, float64, error) {
+	return services.GetTemperature(city, state)
+}
+
+var (
+	locationService    LocationService    = &defaultLocationService{}
+	temperatureService TemperatureService = &defaultTemperatureService{}
+)
+
+func GetLocationService() LocationService {
+	return locationService
+}
+
+func SetLocationService(service LocationService) {
+	locationService = service
+}
+
+func GetTemperatureService() TemperatureService {
+	return temperatureService
+}
+
+func SetTemperatureService(service TemperatureService) {
+	temperatureService = service
+}
+
 func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 	var request CEPCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -35,14 +75,14 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	location, err := services.GetLocationByCEP(cep)
+	location, err := locationService.GetLocationByCEP(cep)
 	if err != nil {
 		fmt.Print("Error fetching location: ", err, "\n")
 		utils.SendErrorResponse(w, http.StatusNotFound, "Location not found ")
 		return
 	}
 
-	celsius, fahrenheit, kelvin, err := services.GetTemperature(location.Localidade, location.Uf)
+	celsius, fahrenheit, kelvin, err := temperatureService.GetTemperature(location.Localidade, location.Uf)
 	if err != nil {
 		fmt.Print("Error fetching temperature: ", err, "\n")
 		utils.SendErrorResponse(w, http.StatusInternalServerError, "Failed to fetch temperature")

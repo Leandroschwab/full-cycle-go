@@ -9,7 +9,6 @@ import (
 	"os"
 )
 
-// Make this variable to allow replacing in tests
 var weatherAPIBaseURL = "http://api.weatherapi.com/v1/current.json"
 
 type WeatherResponse struct {
@@ -50,7 +49,7 @@ func GetTemperature(city, state string) (float64, float64, float64, error) {
 		return 0, 0, 0, fmt.Errorf("failed to decode weather response: %v", err)
 	}
 
-	tempK := math.Round(weatherResponse.Current.TempC*10+273.15) / 10
+	tempK := math.Round(weatherResponse.Current.TempC*10+2730) / 10
 	fmt.Printf("Weather API response: %+v, Calculated Kelvin: %.1f\n", weatherResponse, tempK)
 	return weatherResponse.Current.TempC, weatherResponse.Current.TempF, tempK, nil
 }

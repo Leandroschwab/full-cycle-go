@@ -18,6 +18,10 @@ Set environment variables
 ```bash
 export WEATHER_API_KEY=<apikey>
 ```
+para rodar o programa localmente, utilize o comando:
+```bash
+go run cmd/main.go
+```
 
 
 Para executar os testes automatizados, use os seguintes comandos:
@@ -30,6 +34,7 @@ go test -v ./...
 go test -v ./internal/services
 go test -v ./internal/handlers
 go test -v ./internal/utils
+go test -v ./cmd
 
 # Executar com cobertura de testes
 go test -v -coverprofile=coverage.out ./...

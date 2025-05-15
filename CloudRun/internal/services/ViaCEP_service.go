@@ -1,12 +1,25 @@
 package services
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"crypto/tls"
 	"time"
 )
+
+
+var viacepBaseURL = "https://viacep.com.br/ws/"
+var httpClientCreator = func() *http.Client {
+	return &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+}
 
 type ViaCEP struct {
 	Cep         string `json:"cep"`
@@ -25,16 +38,9 @@ type ViaCEP struct {
 }
 
 func GetLocationByCEP(cep string) (*ViaCEP, error) {
-		client := &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-
-	resp, err := client.Get("https://viacep.com.br/ws/" + cep + "/json/")
+	client := httpClientCreator()
+	
+	resp, err := client.Get(viacepBaseURL + cep + "/json/")
 	
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to ViaCEP: %v", err)
