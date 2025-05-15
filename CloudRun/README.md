@@ -41,7 +41,7 @@ go test -v -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out -o coverage.html
 ```
 
-para testar API utilize o arquivo
+Para testar API utilize o arquivo
 ```bash
 api/api.http
 ```
