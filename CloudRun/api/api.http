@@ -32,7 +32,30 @@ Content-Type: application/json
 {
   "cep": "22021001"
 }
+ 
+ 
+###
 
+POST https://cloudrun-697849652427.us-central1.run.app/temperature HTTP/1.1
+Host: cloudrun-697849652427.us-central1.run.app
+Content-Type: application/json
+
+{
+  "cep": "999999998"
+}
+
+ 
+###
+POST https://cloudrun-697849652427.us-central1.run.app/temperature HTTP/1.1
+Host: cloudrun-697849652427.us-central1.run.app
+Content-Type: application/json
+
+{
+  "cep": "99999999"
+}
+ 
+ 
+###
 //curl
 curl -X POST \
   https://cloudrun-697849652427.us-central1.run.app/temperature \
