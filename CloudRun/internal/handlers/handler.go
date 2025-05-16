@@ -78,7 +78,13 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 	location, err := locationService.GetLocationByCEP(cep)
 	if err != nil {
 		fmt.Print("Error fetching location: ", err, "\n")
-		utils.SendErrorResponse(w, http.StatusNotFound, "can not find zipcode")
+		utils.SendErrorResponse(w, http.StatusNotFound, "Location not found ")
+		return
+	}
+
+	if location.Localidade == "" || location.Uf == "" {
+		fmt.Print("Invalid location data: ", location, "\n")
+		utils.SendErrorResponse(w, http.StatusInternalServerError, "can not find zipcode")
 		return
 	}
 

@@ -56,10 +56,6 @@ func GetLocationByCEP(cep string) (*ViaCEP, error) {
 	}
 	fmt.Printf("Response from ViaCEP: %+v\n", viacep)
 
-	// Check if the response contains valid information - ViaCEP returns an empty object for invalid CEPs
-	if viacep.Localidade == "" || viacep.Uf == "" {
-		return nil, fmt.Errorf("can not find zipcode")
-	}
 
 	return &viacep, nil
 }

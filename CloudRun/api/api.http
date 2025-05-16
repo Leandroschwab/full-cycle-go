@@ -12,9 +12,18 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
+  "cep": "999999998"
+}
+###
+POST http://localhost:8080/temperature HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
   "cep": "99999999"
 }
 ###
+
 
 POST https://cloudrun-697849652427.us-central1.run.app/temperature HTTP/1.1
 Host: cloudrun-697849652427.us-central1.run.app
