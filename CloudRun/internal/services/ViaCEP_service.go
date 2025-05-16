@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 var viacepBaseURL = "https://viacep.com.br/ws/"
 var httpClientCreator = func() *http.Client {
 	return &http.Client{
@@ -39,9 +38,9 @@ type ViaCEP struct {
 
 func GetLocationByCEP(cep string) (*ViaCEP, error) {
 	client := httpClientCreator()
-	
+
 	resp, err := client.Get(viacepBaseURL + cep + "/json/")
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to ViaCEP: %v", err)
 	}
@@ -56,6 +55,11 @@ func GetLocationByCEP(cep string) (*ViaCEP, error) {
 		return nil, fmt.Errorf("failed to decode response from ViaCEP: %v", err)
 	}
 	fmt.Printf("Response from ViaCEP: %+v\n", viacep)
+
+	// Check if the response contains valid information - ViaCEP returns an empty object for invalid CEPs
+	if viacep.Localidade == "" || viacep.Uf == "" {
+		return nil, fmt.Errorf("can not find zipcode")
+	}
 
 	return &viacep, nil
 }
