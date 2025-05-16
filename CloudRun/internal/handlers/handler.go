@@ -71,7 +71,7 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 
 	cep := strings.TrimSpace(request.CEP)
 	if len(cep) != 8 {
-		utils.SendErrorResponse(w, http.StatusBadRequest, "Invalid CEP code format")
+		utils.SendErrorResponse(w, http.StatusBadRequest, "invalid zipcode")
 		return
 	}
 
