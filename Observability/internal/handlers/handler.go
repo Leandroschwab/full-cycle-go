@@ -123,10 +123,11 @@ func ValidateCEPCode(w http.ResponseWriter, r *http.Request) {
 
 	cep := strings.TrimSpace(request.CEP)
 	if len(cep) != 8 {
+		fmt.Print("Invalid CEP code: ", cep, "\n")
 		utils.SendErrorResponse(w, http.StatusUnprocessableEntity, "invalid zipcode")
 		return
 	}
-
+	fmt.Print("CEP Valid: ", cep, "\n")
 	//CEP Valido send request to serviceb
 	httpClient := &http.Client{}
 	orchestrator_URL := os.Getenv("ORCHSTRATOR_URL")
@@ -164,6 +165,7 @@ func ValidateCEPCode(w http.ResponseWriter, r *http.Request) {
 		// Return only the error message with the same status code
 		w.WriteHeader(resp.StatusCode)
 		json.NewEncoder(w).Encode(errorResp)
+		fmt.Println("Error retrieving CEP code from orchestrator")
 		return
 	}
 
@@ -177,4 +179,5 @@ func ValidateCEPCode(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(resp.StatusCode)
 	json.NewEncoder(w).Encode(orchestratorResponse)
+	fmt.Println("Successfully retrieved CEP code from orchestrator")
 }
