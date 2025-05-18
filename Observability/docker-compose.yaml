@@ -1,0 +1,66 @@
+services:
+#  jaeger-all-in-one:
+#    image: jaegertracing/all-in-one:1.latest
+#    container_name: jaeger
+#    restart: unless-stopped
+#    ports:
+#     - "16686:16686"
+#     - "14268"
+#     - "14250"
+#  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: prometheus
+#    restart: unless-stopped
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./.docker/prometheus.yaml:/etc/prometheus/prometheus.yml
+#  otel-collector:
+#    image: otel/opentelemetry-collector:latest
+#    container_name: otel-collector
+#    restart: unless-stopped
+#    ports:
+#      - "8888:8888" # Prometheus metrics port exposed by the collector
+#      - "8889:8889" # Prometheus exporter metrics
+#      - "4317:4317" # OTLP gRPC receiver
+#    command: ["--config=/etc/otel-collector-config.yaml"]
+#    volumes:
+#      - ./docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+  service-a:
+    container_name: serviceA
+    build:
+      context: .
+    environment:
+      - TITLE=serviceA
+      - FUNCTION=inputvalidator
+      - ORCHSTRATOR_URL=service-b
+      - ORCHSTRATOR_PORT=28081
+      - OTEL_SERVICE_NAME=serviceA
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - HTTP_PORT=28080
+    ports:
+      - "28080:28080"
+ #   depends_on:
+ #     - otel-collector
+ #     - jaeger-all-in-one
+ #     - prometheus
+  service-b:
+    container_name: serviceB
+    build:
+      context: .
+    environment:
+      - TITLE=serviceB
+      - FUNCTION=orchestrator
+      - OTEL_SERVICE_NAME=mserviceB
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - HTTP_PORT=28081
+      - WEATHER_API_KEY=66e971e1cd0345d595223156251405
+    ports:
+      - "28081:28081"
+    depends_on:
+      - service-a
+#      - otel-collector
+#      - jaeger-all-in-one
+#      - prometheus
+
+
