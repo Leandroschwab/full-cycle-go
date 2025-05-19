@@ -10,6 +10,8 @@ import (
 
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/services"
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/utils"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type CEPCodeRequest struct {
@@ -68,7 +70,18 @@ func SetTemperatureService(service TemperatureService) {
 	temperatureService = service
 }
 
+type TemplateData struct {
+	Funtion    string
+	HTTP_PORT  string
+	OTELTracer trace.Tracer
+}
+
+var tracer = otel.Tracer("handlers")
+
 func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "HandleCEPCode")
+	defer span.End()
+
 	var request CEPCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		utils.SendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
@@ -83,20 +96,14 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 
 	location, err := locationService.GetLocationByCEP(cep)
 	if err != nil {
-		fmt.Print("Error fetching location: ", err, "\n")
-		utils.SendErrorResponse(w, http.StatusNotFound, "can not find zipcode")
-		return
-	}
-
-	if location.Localidade == "" || location.Uf == "" {
-		fmt.Print("Invalid location data: ", location, "\n")
+		span.RecordError(err)
 		utils.SendErrorResponse(w, http.StatusNotFound, "can not find zipcode")
 		return
 	}
 
 	celsius, fahrenheit, kelvin, err := temperatureService.GetTemperature(location.Localidade, location.Uf)
 	if err != nil {
-		fmt.Print("Error fetching temperature: ", err, "\n")
+		span.RecordError(err)
 		utils.SendErrorResponse(w, http.StatusInternalServerError, "Failed to fetch temperature")
 		return
 	}
@@ -115,6 +122,9 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func ValidateCEPCode(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "ValidateCEPCode")
+	defer span.End()
+
 	var request CEPCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		utils.SendErrorResponse(w, http.StatusBadRequest, "Invalid request body")

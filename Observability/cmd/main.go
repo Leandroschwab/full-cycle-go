@@ -5,64 +5,59 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
+
 	"time"
 
-	"os"
-
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/handlers"
-
+	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
-
-	//"go.opentelemetry.io/otel/sdk"
-	sdkresource "go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	senconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 func initProvider(serviceName, collectorURL string) (func(context.Context) error, error) {
+	fmt.Print("Initializing provider...\n")
 	ctx := context.Background()
-	res, err := sdkresource.New(ctx,
-		sdkresource.WithAttributes(
-			senconv.ServiceNameKey.String(serviceName),
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName(serviceName),
 		),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second) // Increase timeout to 10 seconds
 	defer cancel()
-
-	/*conn, err := grpc.DialContext(ctx, collectorURL,
+	conn, err := grpc.DialContext(ctx, collectorURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
-	)*/
-
-	conn, err := grpc.NewClient(collectorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
 	}
+
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
 
-	bsb := sdktrace.NewBatchSpanProcessor(traceExporter)
-
+	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tracerProvider := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithResource(res),
-		sdktrace.WithSpanProcessor(bsb),
+		sdktrace.WithSpanProcessor(bsp),
 	)
-
 	otel.SetTracerProvider(tracerProvider)
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
@@ -70,30 +65,43 @@ func initProvider(serviceName, collectorURL string) (func(context.Context) error
 	return tracerProvider.Shutdown, nil
 }
 
+func init() {
+	viper.AutomaticEnv()
+}
+
 func main() {
+	log.Println("Starting server...")
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	shutdown, err := initProvider(os.Getenv("OTEL_SERVICE_NAME"), os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
+	shutdown, err := initProvider(viper.GetString("OTEL_SERVICE_NAME"), viper.GetString("OTEL_EXPORTER_OTLP_ENDPOINT"))
 	if err != nil {
-		log.Fatalf("Failed to shutdown TracerProvider: %v\n", err)
+		log.Fatal(err)
 	}
 	defer func() {
 		if err := shutdown(ctx); err != nil {
-			log.Printf("Error shutting down TracerProvider: %v\n", err)
+			log.Fatalf("failed to shutdown TracerProvider: %v", err)
 		}
 	}()
 
-	service := os.Getenv("FUNCTION")
-	http.HandleFunc("/temperature", func(w http.ResponseWriter, r *http.Request) {
+	tracer := otel.Tracer("temperature-service")
+
+	templateData := handlers.TemplateData{
+		Funtion:    viper.GetString("FUNCTION"),
+		HTTP_PORT:  viper.GetString("HTTP_PORT"),
+		OTELTracer: tracer,
+	}
+
+	http.Handle("/temperature", otelhttp.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		switch service {
+		switch templateData.Funtion {
 		case "orchestrator":
 			handlers.HandleCEPCode(w, r)
 		case "inputvalidator":
@@ -101,23 +109,20 @@ func main() {
 		default:
 			http.Error(w, "Invalid function specified", http.StatusInternalServerError)
 		}
-	})
+	}), "/temperature"))
 
-	// Criar o servidor explicitamente
 	server := &http.Server{
-		Addr:    ":" + os.Getenv("HTTP_PORT"),
-		Handler: nil, // DefaultServeMux is used
+		Addr:    ":" + templateData.HTTP_PORT,
+		Handler: nil,
 	}
 
-	// Iniciar o servidor em uma goroutine
 	go func() {
-		log.Println("Starting server on", os.Getenv("HTTP_PORT"))
+		log.Println("Starting server on", templateData.HTTP_PORT)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Could not start server: %s\n", err)
 		}
 	}()
 
-	// Aguardar sinal de interrupção
 	select {
 	case <-sigCh:
 		log.Println("Shutting down gracefully, CTRL+C pressed")
@@ -129,7 +134,6 @@ func main() {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer shutdownCancel()
 
-	// Desligar o servidor adequadamente
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Printf("Server shutdown error: %v\n", err)
 	}
