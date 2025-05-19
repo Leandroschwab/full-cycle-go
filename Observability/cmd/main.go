@@ -11,7 +11,6 @@ import (
 	"os"
 
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/handlers"
-	"github.com/gorilla/mux"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -47,7 +46,6 @@ func initProvider(serviceName, collectorURL string) (func(context.Context) error
 	)*/
 
 	conn, err := grpc.NewClient(collectorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
@@ -89,21 +87,26 @@ func main() {
 		}
 	}()
 
-	router := mux.NewRouter()
 	service := os.Getenv("FUNCTION")
-	switch service {
-	case "orchestrator":
-		router.HandleFunc("/temperature", handlers.HandleCEPCode).Methods("POST")
-	case "inputvalidator":
-		router.HandleFunc("/temperature", handlers.ValidateCEPCode).Methods("POST")
-	default:
-		log.Fatal("Invalid function specified")
-	}
+	http.HandleFunc("/temperature", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		switch service {
+		case "orchestrator":
+			handlers.HandleCEPCode(w, r)
+		case "inputvalidator":
+			handlers.ValidateCEPCode(w, r)
+		default:
+			http.Error(w, "Invalid function specified", http.StatusInternalServerError)
+		}
+	})
 
 	// Criar o servidor explicitamente
 	server := &http.Server{
 		Addr:    ":" + os.Getenv("HTTP_PORT"),
-		Handler: router,
+		Handler: nil, // DefaultServeMux is used
 	}
 
 	// Iniciar o servidor em uma goroutine
