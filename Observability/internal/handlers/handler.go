@@ -12,6 +12,7 @@ import (
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/services"
 	"github.com/Leandroschwab/full-cycle-go/Observability/internal/utils"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -107,7 +108,24 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 		utils.SendErrorResponse(w, http.StatusBadRequest, "invalid zipcode")
 		return
 	}
-	location, err := locationService.GetLocationByCEP(cep)
+
+	// Create a child span to measure CEP lookup time
+	var location *services.ViaCEP
+	var err error
+	func() {
+		_, cepSpan := tracer.Start(ctx, "CEP_Lookup_Service")
+		defer cepSpan.End()
+
+		startTime := time.Now()
+		location, err = locationService.GetLocationByCEP(cep)
+		elapsed := time.Since(startTime)
+
+		cepSpan.SetAttributes(attribute.Float64("cep.lookup.duration_ms", float64(elapsed.Milliseconds())))
+		if err != nil {
+			cepSpan.RecordError(err)
+		}
+	}()
+
 	if err != nil {
 		span.RecordError(err)
 		utils.SendErrorResponse(w, http.StatusNotFound, "can not find zipcode")
@@ -120,13 +138,28 @@ func HandleCEPCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a child span to measure temperature lookup time
+	var celsius, fahrenheit, kelvin float64
+	func() {
+		_, tempSpan := tracer.Start(ctx, "Temperature_Lookup_Service")
+		defer tempSpan.End()
 
-	celsius, fahrenheit, kelvin, err := temperatureService.GetTemperature(location.Localidade, location.Uf)
+		startTime := time.Now()
+		celsius, fahrenheit, kelvin, err = temperatureService.GetTemperature(location.Localidade, location.Uf)
+		elapsed := time.Since(startTime)
+
+		tempSpan.SetAttributes(attribute.Float64("temperature.lookup.duration_ms", float64(elapsed.Milliseconds())))
+		if err != nil {
+			tempSpan.RecordError(err)
+		}
+	}()
+
 	if err != nil {
 		span.RecordError(err)
 		utils.SendErrorResponse(w, http.StatusInternalServerError, "Failed to fetch temperature")
 		return
 	}
+
 	kelvinRounded := math.Round(kelvin*10) / 10
 	response := CEPCodeResponse{
 		City:         location.Localidade,
@@ -206,9 +239,9 @@ func (h *Handler) ValidateCEPCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//add 500ms delay
 
-	time.Sleep(500 * time.Millisecond)
+	//time.Sleep(500 * time.Millisecond)
+	
 	 
 	w.WriteHeader(resp.StatusCode)
 	json.NewEncoder(w).Encode(orchestratorResponse)
