@@ -1,4 +1,12 @@
 services:
+  zipkin:
+    image: openzipkin/zipkin:latest
+    restart: always
+    ports:
+      - "9411:9411"
+    networks:
+      - observability-network
+
   jaeger-all-in-one:
     image: jaegertracing/jaeger:2.6.0
     restart: always
@@ -6,6 +14,9 @@ services:
       - "16686:16686"
       - "14268"
       - "14250"
+    networks:
+      - observability-network
+
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
@@ -14,6 +25,9 @@ services:
       - ./.docker/prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - observability-network
+
   otel-collector:
     image: otel/opentelemetry-collector:latest
     restart: always
@@ -24,6 +38,12 @@ services:
       - "8888:8888"   # Prometheus metrics exposed by the collector
       - "8889:8889"   # Prometheus exporter metrics
       - "4317:4317"   # OTLP gRPC receiver
+    networks:
+      - observability-network
+    depends_on:
+      - zipkin
+      - jaeger-all-in-one
+
   service-a:
     container_name: serviceA
     build:
@@ -34,10 +54,12 @@ services:
       - ORCHSTRATOR_URL=service-b
       - ORCHSTRATOR_PORT=28081
       - OTEL_SERVICE_NAME=serviceA
-      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317 # Ensure this points to the otel-collector service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
       - HTTP_PORT=28080
     ports:
       - "28080:28080"
+    networks:
+      - observability-network
     depends_on:
       - otel-collector
       - jaeger-all-in-one
@@ -50,15 +72,19 @@ services:
       - TITLE=serviceB
       - FUNCTION=orchestrator
       - OTEL_SERVICE_NAME=serviceB
-      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317 # Ensure this points to the otel-collector service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
       - HTTP_PORT=28081
       - WEATHER_API_KEY=66e971e1cd0345d595223156251405
     ports:
       - "28081:28081"
+    networks:
+      - observability-network
     depends_on:
       - service-a
       - otel-collector
-      - jaeger-all-in-one
-      - prometheus
+
+networks:
+  observability-network:
+    driver: bridge
 
 
