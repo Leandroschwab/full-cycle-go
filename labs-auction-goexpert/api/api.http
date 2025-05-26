@@ -1,0 +1,53 @@
+### Criar um novo leilão
+POST http://172.20.20.15:28080/auction HTTP/1.1
+Host: 172.20.20.15:28080
+Content-Type: application/json
+
+{
+  "product_name": "Notebook Dell",
+  "category": "Eletrônicos",
+  "description": "Notebook Dell i7, 16GB RAM, SSD 512GB",
+  "condition": 1
+}
+###
+
+### Buscar todos os leilões ativos (status=0)
+GET http://172.20.20.15:28080/auction?status=0 HTTP/1.1
+Host: 172.20.20.15:28080
+
+### Buscar todos os leilões completos (status=1)
+GET http://172.20.20.15:28080/auction?status=1 HTTP/1.1
+Host: 172.20.20.15:28080
+###
+
+### Buscar leilão por ID
+GET http://172.20.20.15:28080/auction/13282862-2fbe-4e73-9862-4c5b6577c110 HTTP/1.1
+Host: 172.20.20.15:28080
+###
+
+### Buscar lance vencedor de um leilão
+GET http://172.20.20.15:28080/auction/winner/13282862-2fbe-4e73-9862-4c5b6577c110 HTTP/1.1
+Host: 172.20.20.15:28080
+###
+
+### Criar um novo lance
+POST http://172.20.20.15:28080/bid HTTP/1.1
+Host: 172.20.20.15:28080
+Content-Type: application/json
+
+{
+  "auction_id": "e1a40e21-141b-4f92-8022-d8bda8158053",
+  "user_id": "73fe1bd4-5e4e-4560-9aee-a6cf567ad548",
+  "amount": 2500
+}
+###
+
+### Buscar lances de um leilão
+GET http://172.20.20.15:28080/bid/73fe1bd4-5e4e-4560-9aee-a6cf567ad548 HTTP/1.1
+Host: 172.20.20.15:28080
+###
+
+### Buscar usuário por ID
+GET http://172.20.20.15:28080/user/2f07a80b-3cdd-4594-9015-68732beae79d HTTP/1.1
+Host: 172.20.20.15:28080
+###
