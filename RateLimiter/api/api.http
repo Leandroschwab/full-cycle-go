@@ -1,0 +1,11 @@
+# Test the rate limiter API
+
+### Basic request (IP-based limiting)
+GET http://localhost:8080/
+Accept: application/json
+
+### Request with API token
+GET http://localhost:8080/
+Accept: application/json
+API_KEY: test-token-123
+
