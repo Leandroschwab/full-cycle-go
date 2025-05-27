@@ -1,32 +1,8 @@
-POST http://localhost:8080/temperature HTTP/1.1
-Host: localhost:8080
-Content-Type: application/json
 
-{
-  "cep": "22021001"
-}
-###
-
-POST http://localhost:8080/temperature HTTP/1.1
-Host: localhost:8080
-Content-Type: application/json
-
-{
-  "cep": "999999998"
-}
-###
-POST http://localhost:8080/temperature HTTP/1.1
-Host: localhost:8080
-Content-Type: application/json
-
-{
-  "cep": "99999999"
-}
-###remote###
 ###valid###
 
-POST http://172.20.20.15:28080/temperature HTTP/1.1
-Host: 172.20.20.15:28080
+POST http://localhost:28080/temperature HTTP/1.1
+Host: localhost:28080
 Content-Type: application/json
 
 {
@@ -36,8 +12,8 @@ Content-Type: application/json
  
 ###invalid zipcode 422 ###
 
-POST http://172.20.20.15:28080/temperature HTTP/1.1
-Host: 172.20.20.15:28080
+POST http://localhost:28080/temperature HTTP/1.1
+Host: localhost:28080
 Content-Type: application/json
 
 {
@@ -46,8 +22,8 @@ Content-Type: application/json
 
  
 ###Cannot find zipcode 404 ###
-POST http://172.20.20.15:28080/temperature HTTP/1.1
-Host: 172.20.20.15:28080
+POST http://localhost:28080/temperature HTTP/1.1
+Host: localhost:28080
 Content-Type: application/json
 
 {
@@ -55,12 +31,4 @@ Content-Type: application/json
 }
  
  
-###
-//curl
-curl -X POST \
-  https://cloudrun-697849652427.us-central1.run.app/temperature \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "cep": "22021001"
-}'
 
