@@ -42,14 +42,14 @@ MONGODB_DB=auctions
 No diretório raiz do projeto, execute:
 
 ```sh
-docker-compose up --build
+docker compose up --build
 ```
 
 Isso irá subir o MongoDB e a aplicação Go.
 
 ### 4. Utilizando a API
 
-Veja exemplos de requisições no arquivo [`api/http.api`](api/http.api) ou utilize o VSCode REST Client.
+Veja exemplos de requisições no arquivo [`api/api.http`](api/api.http) ou utilize o VSCode REST Client.
 
 ### 5. Rodando os testes
 

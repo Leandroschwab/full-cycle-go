@@ -27,7 +27,7 @@ O sistema é composto por dois microserviços:
 3. Inicie todos os serviços usando Docker Compose:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Testando a Aplicação
