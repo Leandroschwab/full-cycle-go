@@ -39,6 +39,30 @@ O Rate Limiter pode ser configurado usando variáveis de ambiente ou editando o 
    - Uma vez que um identificador é bloqueado, todas as requisições desse IP ou usando esse token receberão um erro 429
    - O bloqueio expirará após a duração de bloqueio configurada
 
+
+
+## Implantação com Docker
+
+O projeto inclui configurações Docker e docker-compose para fácil implantação:
+
+Antes de iniciar, recomenda-se editar o arquivo `.env` na raiz do projeto para ajustar as configurações conforme necessário. Recomendo alterar o BLOCK_DURATION para 5 segundos para facilitar os testes.
+
+```bash
+# Iniciar o serviço
+docker compose up --build
+```
+
+```bash
+# Testar com curl
+curl -H "API_KEY: token-teste" http://localhost:8080/
+```
+
+```bash
+# Resposta esperada
+Hello, Rate Limited World!
+```
+
+
 ## Testes
 
 O limitador de taxa foi testado sob várias condições:
@@ -59,6 +83,9 @@ Incluímos vários scripts shell no diretório `scripts` para ajudar a testar o 
 Para executar estes scripts:
 
 ```bash
+# Faça que os scripts sejam executáveis
+chmod +x scripts/*.sh
+ 
 # Execute os testes individualmente
 ./scripts/test_ip_limit.sh
 ./scripts/test_token_limit.sh
@@ -68,17 +95,6 @@ Para executar estes scripts:
 
 Estes scripts fornecem testes práticos do limitador de taxa sob diferentes condições e são úteis para validar a configuração.
 
-## Implantação com Docker
-
-O projeto inclui configurações Docker e docker-compose para fácil implantação:
-
-```bash
-# Iniciar o serviço
-docker-compose up -d
-
-# Testar com curl
-curl -H "API_KEY: token-teste" http://localhost:8080/
-```
 
 # Desafio 
 Objetivo: Desenvolver um rate limiter em Go que possa ser configurado para limitar o número máximo de requisições por segundo com base em um endereço IP específico ou em um token de acesso.
